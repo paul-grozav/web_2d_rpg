@@ -74,6 +74,17 @@ function check_key(e) {
 // Start here
 //
 function main() {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'gl-matrix.js';
+  document.head.appendChild(script);
+  document.getElementsByTagName("canvas")[0].style.display = 'block';
+  document.getElementsByTagName("canvas")[0].style.position = 'absolute';
+  document.getElementsByTagName("canvas")[0].style.top = '0';
+  document.getElementsByTagName("canvas")[0].style.left = '0';
+  document.getElementsByTagName("canvas")[0].style.right = '0';
+  document.getElementsByTagName("canvas")[0].style.bottom = '0';
+  resize_canvas();
   const canvas = document.querySelector('#canvas');
   const gl = canvas.getContext('webgl');
 
@@ -499,6 +510,5 @@ function isPowerOf2(value) {
   return (value & (value - 1)) == 0;
 }
 // -------------------------------------------------------------------------- //
-resize_canvas();
 main();
 // -------------------------------------------------------------------------- //
