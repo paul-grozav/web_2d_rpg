@@ -280,11 +280,11 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
   const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
   const zNear = 0.1;
   const zFar = 100.0;
-  const projectionMatrix = mat4.create();
+  const projectionMatrix = glMatrix.mat4.create();
 
   // note: glmatrix.js always has the first argument
   // as the destination to receive the result.
-  mat4.perspective(projectionMatrix,
+  glMatrix.mat4.perspective(projectionMatrix,
                    fieldOfView,
                    aspect,
                    zNear,
@@ -292,18 +292,18 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
-  const modelViewMatrix = mat4.create();
+  const modelViewMatrix = glMatrix.mat4.create();
 
   // Now move the drawing position a bit to where we want to
   // start drawing the square.
-  mat4.translate(modelViewMatrix,     // destination matrix
+  glMatrix.mat4.translate(modelViewMatrix,     // destination matrix
                  modelViewMatrix,     // matrix to translate
                  [-square_position_x, square_position_y, -6.0]);  // amount to translate
-//  mat4.rotate(modelViewMatrix,  // destination matrix
+//  glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
 //              modelViewMatrix,  // matrix to rotate
 //              squareRotation,     // amount to rotate in radians
 //              [0, 0, 1]);       // axis to rotate around (Z)
-//  mat4.rotate(modelViewMatrix,  // destination matrix
+//  glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
 //              modelViewMatrix,  // matrix to rotate
 //              cubeRotation * .7,// amount to rotate in radians
 //              [0, 1, 0]);       // axis to rotate around (X)
