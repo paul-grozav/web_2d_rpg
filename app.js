@@ -1,5 +1,44 @@
 // Author: Tancredi-Paul Grozav <paul@grozav.info>
 // -------------------------------------------------------------------------- //
+const init_config = {
+  "texture_sprites": [
+    {
+      "id": "ct",
+      "url": "multi_texture.png",
+      "textures": [
+        {
+          "id": "firefox",
+          "coordinates": [0.5, -1.0, 0.0, -1.0, 0.5,  0.0, 0.0,  0.0],
+        },
+        {
+          "id": "character",
+          "coordinates": [0.0, -1.0, -0.5, -1.0, 0.0,  0.0, -0.5,  0.0],
+        },
+      ],
+    },
+  ],
+  "world": {
+    "tiles": [
+      {
+        "x": 0,
+        "y": 0,
+        "texture": "ct_firefox",
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "texture": "ct_firefox",
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "texture": "ct_character",
+      },
+    ],
+  },
+};
+var config = init_config; // might change in time
+// -------------------------------------------------------------------------- //
 var sense_x = -1; // move the opposite way
 var sense_y = -1; // move the opposite way
 var move_increment_x = 0.2;
@@ -7,41 +46,56 @@ var move_increment_y = 0.2;
 var square_position_x = 0.0;
 var square_position_y = 0.0;
 var squareRotation = 0.0;
-var size = 0.1;
+var size = 0.25;
 
 var data = {
-  'ground': [],
+  "textures": [],
+  "ground": [],
 };
 
-// create ground
-var size_x = 2;
-var size_y = 2;
-for(var i=0; i<15; i++)
+// -------------------------------------------------------------------------- //
+function get_sprite_texture_coordinates_by_id(id)
 {
-  for(var j=0; j<15; j++)
-  {
-    // one tile/square is defined by 4 points:
-    // D--------C
-    // |        |
-    // B--------A
-    var A = [size*size_x*i    , size*size_y*j];
-    var B = [size*size_x*(i-1), size*size_y*j];
-    var C = [size*size_x*i    , size*size_y*(j-1)];
-    var D = [size*size_x*(i-1), size*size_y*(j-1)];
-//    console.log("A=("+A[0]+","+A[1]+")");
-//    console.log("B=("+B[0]+","+B[1]+")");
-//    console.log("C=("+C[0]+","+C[1]+")");
-//    console.log("D=("+D[0]+","+D[1]+")");
-    data['ground'] = data['ground'].concat(A);
-    data['ground'] = data['ground'].concat(B);
-    data['ground'] = data['ground'].concat(C);
-    data['ground'] = data['ground'].concat(D);
-  }
+  var
+}
+// -------------------------------------------------------------------------- //
+function tile_to_vertex_coordinates(tile)
+{
+  // tile size
+  var size_x = 2;
+  var size_y = 2;
+
+  var vertex_points = [];
+  // one tile/square is defined by 4 points:
+  // D--------C
+  // |        |
+  // B--------A
+  var A = [size*size_x*(tile.x+1), size*size_y*(tile.y+1)];
+  var B = [size*size_x*tile.x    , size*size_y*(tile.y+1)];
+  var C = [size*size_x*(tile.x+1), size*size_y*tile.y];
+  var D = [size*size_x*tile.x    , size*size_y*tile.y];
+//  console.log("A=("+A[0]+","+A[1]+")");
+//  console.log("B=("+B[0]+","+B[1]+")");
+//  console.log("C=("+C[0]+","+C[1]+")");
+//  console.log("D=("+D[0]+","+D[1]+")");
+  vertex_points = vertex_points.concat(A, B, C, D);
+  return vertex_points;
+}
+// -------------------------------------------------------------------------- //
+function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
+}
+// -------------------------------------------------------------------------- //
+// create ground
+const tiles = config.world.tiles;
+for(var i=0; i<tiles.length; i++)
+{
+  data["ground"] = data["ground"].concat(tile_to_vertex_coordinates(tiles[i]));
 }
 
 
-document.onresize = resize_canvas;
-function resize_canvas(){
+document.onresize = resize_canvas_handler;
+function resize_canvas_handler(){
   canvas = document.getElementById("canvas");
   if (canvas.width  < window.innerWidth)
   {
@@ -51,10 +105,9 @@ function resize_canvas(){
   {
     canvas.height = window.innerHeight;
   }
-}
+};
 
-document.onkeydown = check_key;
-function check_key(e) {
+document.onkeydown = function(e) {
   e = e || window.event;
   if (e.keyCode == '38') {
     square_position_y += sense_y*move_increment_y;
@@ -68,23 +121,44 @@ function check_key(e) {
   else if (e.keyCode == '39') {
     square_position_x -= sense_x*move_increment_x;
   }
+};
+// -------------------------------------------------------------------------- //
+//
+// Runs before main - to load dependencies
+//
+function pre_main(callback) {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'gl-matrix.js';
+  document.head.appendChild(script);
+  script.onreadystatechange = callback;
+  script.onload = callback;
+}
+// -------------------------------------------------------------------------- //
+// https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
+function load_textures(gl){
+  var textures = [];
+  for(var i=0; i<config.texture_sprites.length; i++)
+  {
+    var texture_sprite = config.texture_sprites[i];
+    textures.push(loadTexture(gl, texture_sprite.url));
+  }
+  return textures;
 }
 // -------------------------------------------------------------------------- //
 //
 // Start here
 //
 function main() {
-  var script = document.createElement('script');
-  script.type = 'text/javascript';
-  script.src = 'gl-matrix.js';
-  document.head.appendChild(script);
   document.getElementsByTagName("canvas")[0].style.display = 'block';
   document.getElementsByTagName("canvas")[0].style.position = 'absolute';
   document.getElementsByTagName("canvas")[0].style.top = '0';
   document.getElementsByTagName("canvas")[0].style.left = '0';
   document.getElementsByTagName("canvas")[0].style.right = '0';
   document.getElementsByTagName("canvas")[0].style.bottom = '0';
-  resize_canvas();
+  document.getElementsByTagName("canvas")[0].style.width = '100%';
+  document.getElementsByTagName("canvas")[0].style.height = '100%';
+  resize_canvas_handler();
   const canvas = document.querySelector('#canvas');
   const gl = canvas.getContext('webgl');
 
@@ -111,19 +185,47 @@ function main() {
   `;
 
   // Fragment shader program
-  const fsSource = `
-    varying highp vec2 vTextureCoord;
-
-    uniform sampler2D u_image0;
-
+  var fsSource = "";
+  fsSource += "precision mediump float;\n";
+  fsSource += "varying highp vec2 vTextureCoord;\n";
+  for(var i=0; i<config.texture_sprites.length; i++)
+  {
+    var sprite = config.texture_sprites[i];
+    for(var j=0; j<sprite.textures.length; j++)
+    {
+      var texture = sprite.textures[j];
+      fsSource += "uniform sampler2D "+sprite.id+"_"+texture.id+";\n";
+    }
+  }
+  fsSource += `
     void main(void) {
-      gl_FragColor = texture2D(u_image0, vTextureCoord);
+  `;
+  for(var i=0; i<config.texture_sprites.length; i++)
+  {
+    var sprite = config.texture_sprites[i];
+    for(var j=0; j<sprite.textures.length; j++)
+    {
+      var texture = sprite.textures[j];
+      fsSource += "vec4 pixel_color_"+i+"_"+j+" = texture2D("+
+        sprite.id+"_"+texture.id+", vTextureCoord);\n";
+    }
+  }
+  fsSource += `
+      gl_FragColor = pixel_color_0_0; // ???
     }
   `;
+//  console.log(fsSource);
 
   // Initialize a shader program; this is where all the lighting
   // for the vertices and so forth is established.
   const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+  var textures_ul = [];
+  for(var i=0; i<config.texture_sprites.length; i++)
+  {
+    var texture = config.texture_sprites[i];
+    textures_ul.push(gl.getUniformLocation(shaderProgram, texture.id));
+  }
 
   // Collect all the info needed to use the shader program.
   // Look up which attributes our shader program is using
@@ -138,7 +240,7 @@ function main() {
     uniformLocations: {
       projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
       modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-      uSampler: gl.getUniformLocation(shaderProgram, 'u_image0'),
+      textures: textures_ul,
     },
   };
 
@@ -146,11 +248,7 @@ function main() {
   // objects we'll be drawing.
   const buffers = initBuffers(gl);
 
-  const texture = [
-    loadTexture(gl, 'cubetexture.png'),
-    loadTexture(gl, 'human.png'),
-  ];
-
+  data.textures = load_textures(gl);
   var then = 0;
 
   // Draw the scene repeatedly
@@ -159,7 +257,7 @@ function main() {
     const deltaTime = now - then;
     then = now;
 
-    drawScene(gl, programInfo, buffers, texture, deltaTime);
+    drawScene(gl, programInfo, buffers, data.textures, deltaTime);
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
@@ -192,11 +290,14 @@ function initBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
 
   var textureCoordinates = [];
-  for(var offset=0; offset<data['ground'].length; offset+=4)
+  for(var i=0; i<config.texture_sprites.length; i++)
   {
-    textureCoordinates = textureCoordinates.concat(
-      [0.0, -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0]
-    );
+    var sprite = config.texture_sprites[i];
+    for(var j=0; j<sprite.textures.length; j++)
+    {
+      var texture = sprite.textures[j];
+      textureCoordinates = textureCoordinates.concat(texture.coordinates);
+    }
   }
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
@@ -215,63 +316,9 @@ function initBuffers(gl) {
 }
 // -------------------------------------------------------------------------- //
 //
-// Initialize a texture and load an image.
-// When the image finished loading copy it into the texture.
-//
-function loadTexture(gl, url) {
-  const texture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-
-  // Because images have to be download over the internet
-  // they might take a moment until they are ready.
-  // Until then put a single pixel in the texture so we can
-  // use it immediately. When the image has finished downloading
-  // we'll update the texture with the contents of the image.
-  const level = 0;
-  const internalFormat = gl.RGBA;
-  const width = 1;
-  const height = 1;
-  const border = 0;
-  const srcFormat = gl.RGBA;
-  const srcType = gl.UNSIGNED_BYTE;
-  const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
-  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                width, height, border, srcFormat, srcType,
-                pixel);
-
-  const image = new Image();
-  image.onload = function() {
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-                  srcFormat, srcType, image);
-
-    // WebGL1 has different requirements for power of 2 images
-    // vs non power of 2 images so check if the image is a
-    // power of 2 in both dimensions.
-    if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-       // Yes, it's a power of 2. Generate mips.
-       gl.generateMipmap(gl.TEXTURE_2D);
-    } else {
-       // No, it's not a power of 2. Turn of mips and set
-       // wrapping to clamp to edge
-       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    }
-  };
-  image.src = url;
-
-  return texture;
-}
-
-function isPowerOf2(value) {
-  return (value & (value - 1)) == 0;
-}
-
-//
 // Draw the scene.
 //
-function drawScene(gl, programInfo, buffers, texture, deltaTime) {
+function drawScene(gl, programInfo, buffers, textures, deltaTime) {
   gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);                 // Clear everything
   gl.enable(gl.DEPTH_TEST);           // Enable depth testing
@@ -377,14 +424,20 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 
   // Specify the texture to map onto the faces.
 
+  for(var i=0; i<textures.length; i++)
+  {
+    gl.uniform1i(programInfo.uniformLocations.textures[i], i);
+    gl.activeTexture(gl.TEXTURE0+i);
+    gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+  }
   // Tell WebGL we want to affect texture unit 0
-  gl.activeTexture(gl.TEXTURE0);
+//  gl.activeTexture(gl.TEXTURE0);
 
   // Bind the texture to texture unit 0
-  gl.bindTexture(gl.TEXTURE_2D, texture[0]);
+//  gl.bindTexture(gl.TEXTURE_2D, textures[0]);
 
   // Tell the shader we bound the texture to texture unit 0
-  gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+//  gl.uniform1i(programInfo.uniformLocations.textures[0], 0);
 
   {
 //    const vertexCount = 36;
@@ -397,7 +450,7 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 //    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
 //    offset = 4 ; // draw second square
 //    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-    for(var offset=0; offset<data['ground'].length; offset+=vertexCount)
+    for(var offset=0; offset<data['ground'].length/2; offset+=vertexCount)
     {
       gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
     }
@@ -506,9 +559,5 @@ function loadTexture(gl, url) {
   return texture;
 }
 // -------------------------------------------------------------------------- //
-function isPowerOf2(value) {
-  return (value & (value - 1)) == 0;
-}
-// -------------------------------------------------------------------------- //
-main();
+pre_main(main);
 // -------------------------------------------------------------------------- //
