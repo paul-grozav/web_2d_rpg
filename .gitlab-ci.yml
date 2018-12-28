@@ -1,0 +1,15 @@
+# Author: Tancredi-Paul Grozav <paul@grozav.info>
+# License: MIT
+# ============================================================================ #
+pages:
+  stage: deploy
+  script:
+    - mkdir .public
+    - cp -r * .public
+    - mv .public public
+  artifacts:
+    paths:
+      - public
+#  only:
+#    - master
+# ============================================================================ #
