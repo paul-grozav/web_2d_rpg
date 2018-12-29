@@ -3,15 +3,15 @@
 const init_config = {
   "texture_sprites": [
     {
-      "id": "ct",
-      "url": "multi_texture.png",
+      "id": "s1",
+      "url": "sprite1_character_ground.png",
       "textures": [
         {
-          "id": "firefox",
+          "id": "character",
           "coordinates": [0.5, -1.0, 0.0, -1.0, 0.5,  0.0, 0.0,  0.0],
         },
         {
-          "id": "character",
+          "id": "ground",
           "coordinates": [0.0, -1.0, -0.5, -1.0, 0.0,  0.0, -0.5,  0.0],
         },
       ],
@@ -22,17 +22,32 @@ const init_config = {
       {
         "x": 0,
         "y": 0,
-        "texture": "ct_firefox",
+        "texture": "s1_character",
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "texture": "s1_ground",
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "texture": "s1_ground",
+      },
+      {
+        "x": 1,
+        "y": 0,
+        "texture": "s1_ground",
       },
       {
         "x": 1,
         "y": 1,
-        "texture": "ct_character",
+        "texture": "s1_ground",
       },
       {
         "x": 1,
         "y": 2,
-        "texture": "ct_firefox",
+        "texture": "s1_ground",
       },
     ],
   },
@@ -41,8 +56,8 @@ var config = init_config; // might change in time
 // -------------------------------------------------------------------------- //
 var sense_x = -1; // move the opposite way
 var sense_y = -1; // move the opposite way
-var move_increment_x = 0.2;
-var move_increment_y = 0.2;
+var move_increment_x = 0.5;
+var move_increment_y = 0.5;
 var square_position_x = 0.0;
 var square_position_y = 0.0;
 var squareRotation = 0.0;
@@ -297,6 +312,10 @@ function initBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
   // Now create an array of positions for the square.
+  if(data.ground.length == 0)
+  {
+    alert('no tiles to show');
+  }
   var positions = data.ground;
   // Now pass the list of positions into WebGL to build the
   // shape. We do this by creating a Float32Array from the
