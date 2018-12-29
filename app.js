@@ -132,24 +132,32 @@ function resize_canvas_handler()
   }
 };
 // -------------------------------------------------------------------------- //
-function handle_key_press(e, data, settings)
+function handle_key_press(e, data, config)
 {
-  const sense_x = settings.sense_x;
-  const sense_y = settings.sense_y;
-  const move_increment_x = settings.move_increment_x;
-  const move_increment_y = settings.move_increment_y;
+  const sense_x = config.settings.sense_x;
+  const sense_y = config.settings.sense_y;
+  const move_increment_x = config.settings.move_increment_x;
+  const move_increment_y = config.settings.move_increment_y;
   e = e || window.event;
   if (e.keyCode == '38') { // up
     data.square_position_y += sense_y*move_increment_y;
+    config.world.tiles[config.world.tiles.length-1].y += 1;
+    initBuffers(config, data);
   }
   else if (e.keyCode == '40') { // down
     data.square_position_y -= sense_y*move_increment_y;
+    config.world.tiles[config.world.tiles.length-1].y -= 1;
+    initBuffers(config, data);
   }
   else if (e.keyCode == '37') { // left
     data.square_position_x += sense_x*move_increment_x;
+    config.world.tiles[config.world.tiles.length-1].x -= 1;
+    initBuffers(config, data);
   }
   else if (e.keyCode == '39') { // right
     data.square_position_x -= sense_x*move_increment_x;
+    config.world.tiles[config.world.tiles.length-1].x += 1;
+    initBuffers(config, data);
   }
   else if (e.keyCode == '13') { // enter
     console.log(data);
@@ -162,8 +170,10 @@ function handle_key_press(e, data, settings)
 function pre_main(config, callback)
 {
   var data = {
+    "gl": null,
     "textures": [],
     "ground": [],
+    "buffers": {},
     "square_rotation": 0.0,
     "square_position_x": 0.0,
     "square_position_y": 0.0,
@@ -195,7 +205,7 @@ function pre_main(config, callback)
 
   // Handle keyboard (up, down, left, right) key press
   document.onkeydown = function(e){
-    handle_key_press(e, data, config.settings);
+    handle_key_press(e, data, config);
   };
 }
 // -------------------------------------------------------------------------- //
@@ -224,6 +234,7 @@ function main(config, data)
     alert('Unable to initialize WebGL. Your browser or machine may not support it.');
     return;
   }
+  data.gl = gl;
 
   // Vertex shader program
   const vsSource = `
@@ -312,18 +323,9 @@ function main(config, data)
     },
   };
 
-  // create ground
-  const tiles = config.world.tiles;
-  for(var i=0; i<tiles.length; i++)
-  {
-    data.ground = data.ground.concat(
-      tile_to_vertex_coordinates(tiles[i], config.settings)
-    );
-  }
-
   // Here's where we call the routine that builds all the
   // objects we'll be drawing.
-  const buffers = initBuffers(gl, config, data);
+  initBuffers(config, data);
 
   data.textures = load_textures(gl, config);
   var then = 0;
@@ -334,7 +336,7 @@ function main(config, data)
     const deltaTime = now - then;
     then = now;
 
-    drawScene(gl, programInfo, buffers, deltaTime, data);
+    drawScene(gl, programInfo, deltaTime, data);
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
@@ -346,8 +348,18 @@ function main(config, data)
 // Initialize the buffers we'll need. For this demo, we just
 // have one object -- a simple three-dimensional cube.
 //
-function initBuffers(gl, config, data) {
+function initBuffers(config, data) {
+  // create ground
+  data.ground = [];
+  const tiles = config.world.tiles;
+  for(var i=0; i<tiles.length; i++)
+  {
+    data.ground = data.ground.concat(
+      tile_to_vertex_coordinates(tiles[i], config.settings)
+    );
+  }
 
+  const gl = data.gl;
   // Create a buffer for the cube's vertex positions.
   const positionBuffer = gl.createBuffer();
 
@@ -387,7 +399,7 @@ function initBuffers(gl, config, data) {
   const indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-  return {
+  data.buffers = {
     position: positionBuffer,
     textureCoord: textureCoordBuffer,
     indices: indexBuffer,
@@ -397,7 +409,7 @@ function initBuffers(gl, config, data) {
 //
 // Draw the scene.
 //
-function drawScene(gl, programInfo, buffers, deltaTime, data) {
+function drawScene(gl, programInfo, deltaTime, data) {
   const square_position_x = data.square_position_x;
   const square_position_y = data.square_position_y;
   gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
@@ -455,7 +467,7 @@ function drawScene(gl, programInfo, buffers, deltaTime, data) {
     const normalize = false;
     const stride = 0;
     const offset = 0;
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, data.buffers.position);
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexPosition,
         numComponents,
@@ -475,7 +487,7 @@ function drawScene(gl, programInfo, buffers, deltaTime, data) {
     const normalize = false;
     const stride = 0;
     const offset = 0;
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
+    gl.bindBuffer(gl.ARRAY_BUFFER, data.buffers.textureCoord);
     gl.vertexAttribPointer(
         programInfo.attribLocations.textureCoord,
         numComponents,
@@ -488,7 +500,7 @@ function drawScene(gl, programInfo, buffers, deltaTime, data) {
   }
 
   // Tell WebGL which indices to use to index the vertices
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, data.buffers.indices);
 
   // Tell WebGL to use our program when drawing
   gl.useProgram(programInfo.program);
