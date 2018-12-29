@@ -27,12 +27,12 @@ const init_config = {
       {
         "x": 1,
         "y": 1,
-        "texture": "ct_firefox",
+        "texture": "ct_character",
       },
       {
         "x": 1,
         "y": 2,
-        "texture": "ct_character",
+        "texture": "ct_firefox",
       },
     ],
   },
@@ -54,9 +54,27 @@ var data = {
 };
 
 // -------------------------------------------------------------------------- //
-function get_sprite_texture_coordinates_by_id(id)
+function get_sprite_texture_coordinates_by_id(config,id)
 {
-  var
+  const ids = id.split("_");
+  const sprite_id = ids[0];
+  const texture_id = ids[1];
+  for(var i=0; i<config.texture_sprites.length; i++)
+  {
+    const sprite = config.texture_sprites[i];
+    if(sprite.id == sprite_id)
+    {
+      for(var j=0; j<sprite.textures.length; j++)
+      {
+        const texture = sprite.textures[j];
+        if(texture.id == texture_id)
+        {
+          return texture.coordinates;
+        }
+      }
+    }
+  }
+  return [];// not found
 }
 // -------------------------------------------------------------------------- //
 function tile_to_vertex_coordinates(tile)
@@ -90,7 +108,7 @@ function isPowerOf2(value) {
 const tiles = config.world.tiles;
 for(var i=0; i<tiles.length; i++)
 {
-  data["ground"] = data["ground"].concat(tile_to_vertex_coordinates(tiles[i]));
+  data.ground = data.ground.concat(tile_to_vertex_coordinates(tiles[i]));
 }
 
 
@@ -279,7 +297,7 @@ function initBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
   // Now create an array of positions for the square.
-  var positions = data['ground'];
+  var positions = data.ground;
   // Now pass the list of positions into WebGL to build the
   // shape. We do this by creating a Float32Array from the
   // JavaScript array, then use it to fill the current buffer.
@@ -290,14 +308,12 @@ function initBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
 
   var textureCoordinates = [];
-  for(var i=0; i<config.texture_sprites.length; i++)
+  for(var i=0; i<config.world.tiles.length; i++)
   {
-    var sprite = config.texture_sprites[i];
-    for(var j=0; j<sprite.textures.length; j++)
-    {
-      var texture = sprite.textures[j];
-      textureCoordinates = textureCoordinates.concat(texture.coordinates);
-    }
+    const tile = config.world.tiles[i];
+    const tile_texture_coordinates =
+      get_sprite_texture_coordinates_by_id(config, tile.texture);
+    textureCoordinates = textureCoordinates.concat(tile_texture_coordinates);
   }
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
@@ -445,12 +461,12 @@ function drawScene(gl, programInfo, buffers, textures, deltaTime) {
 //    const offset = 0;
 //    gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
 
-//    var offset = 0;
+    var offset = 0;
     const vertexCount = 4;
 //    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
 //    offset = 4 ; // draw second square
 //    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-    for(var offset=0; offset<data['ground'].length/2; offset+=vertexCount)
+    for(var offset=0; offset<data.ground.length/2; offset+=vertexCount)
     {
       gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
     }
