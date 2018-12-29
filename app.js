@@ -21,7 +21,7 @@ const init_config = {
         },
         {
           "id": "ground",
-          "coordinates": [-0.007, -1.0, -0.5, -1.0, -0.007,  0.0, -0.48,  0.0],
+          "coordinates": [-0.01, -1.0, -0.492, -1.0, -0.007,  0.0, -0.48,  0.0],
         },
       ],
     },
@@ -227,7 +227,9 @@ function main(config, data)
 {
 //  var config = const_config
   const canvas = document.querySelector('#canvas');
-  const gl = canvas.getContext('webgl');
+  const gl = canvas.getContext('webgl', {
+    alpha: false,
+  });
 
   // If we don't have a GL context, give up now
   if (!gl) {
