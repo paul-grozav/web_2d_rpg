@@ -1,6 +1,15 @@
 // Author: Tancredi-Paul Grozav <paul@grozav.info>
 // -------------------------------------------------------------------------- //
 const init_config = {
+  "settings": {
+    "sense_x": -1, // move the opposite way
+    "sense_y": -1, // move the opposite way
+    "move_increment_x": 0.5,
+    "move_increment_y": 0.5,
+    "size_x": 2,
+    "size_y": 2,
+    "size": 0.25,
+  },
   "texture_sprites": [
     {
       "id": "s1",
@@ -52,22 +61,7 @@ const init_config = {
     ],
   },
 };
-var config = init_config; // might change in time
-// -------------------------------------------------------------------------- //
-var sense_x = -1; // move the opposite way
-var sense_y = -1; // move the opposite way
-var move_increment_x = 0.5;
-var move_increment_y = 0.5;
-var square_position_x = 0.0;
-var square_position_y = 0.0;
-var squareRotation = 0.0;
-var size = 0.25;
-
-var data = {
-  "textures": [],
-  "ground": [],
-};
-
+//var config = init_config; // might change in time
 // -------------------------------------------------------------------------- //
 function get_sprite_texture_coordinates_by_id(config,id)
 {
@@ -92,11 +86,12 @@ function get_sprite_texture_coordinates_by_id(config,id)
   return [];// not found
 }
 // -------------------------------------------------------------------------- //
-function tile_to_vertex_coordinates(tile)
+function tile_to_vertex_coordinates(tile, settings)
 {
   // tile size
-  var size_x = 2;
-  var size_y = 2;
+  const size = settings.size;
+  const size_x = settings.size_x;
+  const size_y = settings.size_y;
 
   var vertex_points = [];
   // one tile/square is defined by 4 points:
@@ -119,16 +114,8 @@ function isPowerOf2(value) {
   return (value & (value - 1)) == 0;
 }
 // -------------------------------------------------------------------------- //
-// create ground
-const tiles = config.world.tiles;
-for(var i=0; i<tiles.length; i++)
+function resize_canvas_handler()
 {
-  data.ground = data.ground.concat(tile_to_vertex_coordinates(tiles[i]));
-}
-
-
-document.onresize = resize_canvas_handler;
-function resize_canvas_handler(){
   canvas = document.getElementById("canvas");
   if (canvas.width  < window.innerWidth)
   {
@@ -139,37 +126,76 @@ function resize_canvas_handler(){
     canvas.height = window.innerHeight;
   }
 };
-
-document.onkeydown = function(e) {
+// -------------------------------------------------------------------------- //
+function handle_key_press(e, data, settings)
+{
+  const sense_x = settings.sense_x;
+  const sense_y = settings.sense_y;
+  const move_increment_x = settings.move_increment_x;
+  const move_increment_y = settings.move_increment_y;
   e = e || window.event;
-  if (e.keyCode == '38') {
-    square_position_y += sense_y*move_increment_y;
+  if (e.keyCode == '38') { // up
+    data.square_position_y += sense_y*move_increment_y;
   }
-  else if (e.keyCode == '40') {
-    square_position_y -= sense_y*move_increment_y;
+  else if (e.keyCode == '40') { // down
+    data.square_position_y -= sense_y*move_increment_y;
   }
-  else if (e.keyCode == '37') {
-    square_position_x += sense_x*move_increment_x;
+  else if (e.keyCode == '37') { // left
+    data.square_position_x += sense_x*move_increment_x;
   }
-  else if (e.keyCode == '39') {
-    square_position_x -= sense_x*move_increment_x;
+  else if (e.keyCode == '39') { // right
+    data.square_position_x -= sense_x*move_increment_x;
   }
-};
+  else if (e.keyCode == '13') { // enter
+    console.log(data);
+  }
+}
 // -------------------------------------------------------------------------- //
 //
 // Runs before main - to load dependencies
 //
-function pre_main(callback) {
+function pre_main(config, callback)
+{
+  var data = {
+    "textures": [],
+    "ground": [],
+    "square_rotation": 0.0,
+    "square_position_x": 0.0,
+    "square_position_y": 0.0,
+  };
+
+  // load JS dependencies
   var script = document.createElement('script');
   script.type = 'text/javascript';
   script.src = 'gl-matrix.js';
   document.head.appendChild(script);
-  script.onreadystatechange = callback;
-  script.onload = callback;
+  script.onreadystatechange = function(){
+    callback(config, data);
+  };
+  script.onload = function(){
+    callback(config, data);
+  };
+
+  // Set canvas size to full body
+  document.getElementsByTagName("canvas")[0].style.display = 'block';
+  document.getElementsByTagName("canvas")[0].style.position = 'absolute';
+  document.getElementsByTagName("canvas")[0].style.top = '0';
+  document.getElementsByTagName("canvas")[0].style.left = '0';
+  document.getElementsByTagName("canvas")[0].style.right = '0';
+  document.getElementsByTagName("canvas")[0].style.bottom = '0';
+  document.getElementsByTagName("canvas")[0].style.width = '100%';
+  document.getElementsByTagName("canvas")[0].style.height = '100%';
+  document.onresize = resize_canvas_handler;
+  resize_canvas_handler();
+
+  // Handle keyboard (up, down, left, right) key press
+  document.onkeydown = function(e){
+    handle_key_press(e, data, config.settings);
+  };
 }
 // -------------------------------------------------------------------------- //
 // https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
-function load_textures(gl){
+function load_textures(gl, config){
   var textures = [];
   for(var i=0; i<config.texture_sprites.length; i++)
   {
@@ -182,16 +208,9 @@ function load_textures(gl){
 //
 // Start here
 //
-function main() {
-  document.getElementsByTagName("canvas")[0].style.display = 'block';
-  document.getElementsByTagName("canvas")[0].style.position = 'absolute';
-  document.getElementsByTagName("canvas")[0].style.top = '0';
-  document.getElementsByTagName("canvas")[0].style.left = '0';
-  document.getElementsByTagName("canvas")[0].style.right = '0';
-  document.getElementsByTagName("canvas")[0].style.bottom = '0';
-  document.getElementsByTagName("canvas")[0].style.width = '100%';
-  document.getElementsByTagName("canvas")[0].style.height = '100%';
-  resize_canvas_handler();
+function main(config, data)
+{
+//  var config = const_config
   const canvas = document.querySelector('#canvas');
   const gl = canvas.getContext('webgl');
 
@@ -254,10 +273,21 @@ function main() {
   const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
 
   var textures_ul = [];
+//  for(var i=0; i<config.texture_sprites.length; i++)
+//  {
+//    var texture = config.texture_sprites[i];
+//    textures_ul.push(gl.getUniformLocation(shaderProgram, texture.id));
+//  }
+
   for(var i=0; i<config.texture_sprites.length; i++)
   {
-    var texture = config.texture_sprites[i];
-    textures_ul.push(gl.getUniformLocation(shaderProgram, texture.id));
+    var sprite = config.texture_sprites[i];
+    for(var j=0; j<sprite.textures.length; j++)
+    {
+      var texture = sprite.textures[j];
+      textures_ul.push(gl.getUniformLocation(shaderProgram,
+        sprite.id+"_"+texture.id));
+    }
   }
 
   // Collect all the info needed to use the shader program.
@@ -277,11 +307,20 @@ function main() {
     },
   };
 
+  // create ground
+  const tiles = config.world.tiles;
+  for(var i=0; i<tiles.length; i++)
+  {
+    data.ground = data.ground.concat(
+      tile_to_vertex_coordinates(tiles[i], config.settings)
+    );
+  }
+
   // Here's where we call the routine that builds all the
   // objects we'll be drawing.
-  const buffers = initBuffers(gl);
+  const buffers = initBuffers(gl, config, data);
 
-  data.textures = load_textures(gl);
+  data.textures = load_textures(gl, config);
   var then = 0;
 
   // Draw the scene repeatedly
@@ -290,7 +329,7 @@ function main() {
     const deltaTime = now - then;
     then = now;
 
-    drawScene(gl, programInfo, buffers, data.textures, deltaTime);
+    drawScene(gl, programInfo, buffers, deltaTime, data);
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
@@ -302,7 +341,7 @@ function main() {
 // Initialize the buffers we'll need. For this demo, we just
 // have one object -- a simple three-dimensional cube.
 //
-function initBuffers(gl) {
+function initBuffers(gl, config, data) {
 
   // Create a buffer for the cube's vertex positions.
   const positionBuffer = gl.createBuffer();
@@ -353,7 +392,9 @@ function initBuffers(gl) {
 //
 // Draw the scene.
 //
-function drawScene(gl, programInfo, buffers, textures, deltaTime) {
+function drawScene(gl, programInfo, buffers, deltaTime, data) {
+  const square_position_x = data.square_position_x;
+  const square_position_y = data.square_position_y;
   gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);                 // Clear everything
   gl.enable(gl.DEPTH_TEST);           // Enable depth testing
@@ -394,7 +435,7 @@ function drawScene(gl, programInfo, buffers, textures, deltaTime) {
                  [-square_position_x, square_position_y, -6.0]);  // amount to translate
 //  glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
 //              modelViewMatrix,  // matrix to rotate
-//              squareRotation,     // amount to rotate in radians
+//              data.square_rotation,     // amount to rotate in radians
 //              [0, 0, 1]);       // axis to rotate around (Z)
 //  glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
 //              modelViewMatrix,  // matrix to rotate
@@ -458,12 +499,11 @@ function drawScene(gl, programInfo, buffers, textures, deltaTime) {
       modelViewMatrix);
 
   // Specify the texture to map onto the faces.
-
-  for(var i=0; i<textures.length; i++)
+  for(var i=0; i<data.textures.length; i++)
   {
     gl.uniform1i(programInfo.uniformLocations.textures[i], i);
     gl.activeTexture(gl.TEXTURE0+i);
-    gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+    gl.bindTexture(gl.TEXTURE_2D, data.textures[i]);
   }
   // Tell WebGL we want to affect texture unit 0
 //  gl.activeTexture(gl.TEXTURE0);
@@ -492,7 +532,7 @@ function drawScene(gl, programInfo, buffers, textures, deltaTime) {
   }
 
   // Update the rotation for the next draw
-  squareRotation += deltaTime;
+  data.square_rotation += deltaTime;
 }
 // -------------------------------------------------------------------------- //
 //
@@ -594,5 +634,5 @@ function loadTexture(gl, url) {
   return texture;
 }
 // -------------------------------------------------------------------------- //
-pre_main(main);
+pre_main(init_config, main);
 // -------------------------------------------------------------------------- //
