@@ -21,7 +21,7 @@ const init_config = {
         },
         {
           "id": "ground",
-          "coordinates": [0.0, -1.0, -0.5, -1.0, 0.0,  0.0, -0.5,  0.0],
+          "coordinates": [-0.007, -1.0, -0.5, -1.0, -0.007,  0.0, -0.48,  0.0],
         },
       ],
     },
@@ -31,7 +31,7 @@ const init_config = {
       {
         "x": 0,
         "y": 0,
-        "texture": "s1_character",
+        "texture": "s1_ground",
       },
       {
         "x": 0,
@@ -57,6 +57,11 @@ const init_config = {
         "x": 1,
         "y": 2,
         "texture": "s1_ground",
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "texture": "s1_character",
       },
     ],
   },
