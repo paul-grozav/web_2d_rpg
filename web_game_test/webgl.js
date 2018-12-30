@@ -85,6 +85,7 @@ init_buffers(data, objects, textures) {
   {
     alert('Error: no objects to show');
   }
+//  console.log(objects);
   // Now pass the list of positions into WebGL to build the
   // shape. We do this by creating a Float32Array from the
   // JavaScript array, then use it to fill the current buffer.
@@ -101,7 +102,11 @@ init_buffers(data, objects, textures) {
   {
     alert('Error: no textures to show');
   }
+  console.log(textures);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textures), gl.STATIC_DRAW);
+
+
+
 
   // Build the element array buffer; this specifies the indices
   // into the vertex arrays for each face's vertices.
@@ -113,6 +118,11 @@ init_buffers(data, objects, textures) {
     textureCoord: texture_coord_buffer,
     indices: index_buffer,
   };
+}
+// -------------------------------------------------------------------------- //
+is_power_of_two(value)
+{
+  return (value & (value - 1)) == 0;
 }
 // -------------------------------------------------------------------------- //
 // When the image finished loading copy it into the texture.
@@ -164,7 +174,7 @@ load_texture(url)
   image.src = url;
 //  image.setAttribute('src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAABlCAYAAABQif3yAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAACAASURBVHic5Z1ZcBzXee9/p7tnHwwG62AnQYAbSIKLQHERKcnaV8u$
 //  image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
-//  console.log(image.src);
+//  console.log(url);
 
   return texture;
 }
@@ -176,7 +186,7 @@ load_sprite_textures(sprite_textures){
   {
     var sprite = sprite_textures[i];
 //    console.log(sprite.get_url());
-    textures.push(this.load_texture(this.gl, sprite.get_url()));
+    textures.push(this.load_texture(sprite.get_url()));
   }
   return textures;
 }
@@ -306,7 +316,7 @@ draw_scene(deltaTime, data)
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, data.buffers.indices);
 
   // Tell WebGL to use our program when drawing
-  gl.useProgram(program_info.program);
+  gl.useProgram(this.shader_program);
 
   // Set the shader uniforms
   gl.uniformMatrix4fv(
@@ -321,9 +331,11 @@ draw_scene(deltaTime, data)
   // Specify the texture to map onto the faces.
   for(var i=0; i<data.textures.length; i++)
   {
+//    console.log(program_info.uniformLocations.textures[i]);
     gl.uniform1i(program_info.uniformLocations.textures[i], i);
     gl.activeTexture(gl.TEXTURE0+i);
     gl.bindTexture(gl.TEXTURE_2D, data.textures[i]);
+//    console.log(data.textures[i]);
   }
   // Tell WebGL we want to affect texture unit 0
 //  gl.activeTexture(gl.TEXTURE0);

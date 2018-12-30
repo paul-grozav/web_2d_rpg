@@ -37,7 +37,7 @@ fragment_shader_texture_declarations()
   var fs_source = "";
   for (var texture_name in this.textures)
   {
-    console.log(texture_name);
+//    console.log(texture_name);
     fs_source += "uniform sampler2D "+texture_name+";\n";
   }
   return fs_source;

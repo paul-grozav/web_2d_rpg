@@ -95,10 +95,6 @@ get_sprite_texture_coordinates_by_id(config,id)
   return [];// not found
 }
 // -------------------------------------------------------------------------- //
-is_power_of_two(value) {
-  return (value & (value - 1)) == 0;
-}
-// -------------------------------------------------------------------------- //
 resize_canvas_handler()
 {
   canvas = document.getElementById("canvas");
