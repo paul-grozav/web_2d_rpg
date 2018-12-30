@@ -76,29 +76,6 @@ constructor(config) {
 //  return `${this.config} says hello.`;
 }
 // -------------------------------------------------------------------------- //
-get_sprite_texture_coordinates_by_id(config,id)
-{
-  const ids = id.split("_");
-  const sprite_id = ids[0];
-  const texture_id = ids[1];
-  for(var i=0; i<config.texture_sprites.length; i++)
-  {
-    const sprite = config.texture_sprites[i];
-    if(sprite.id == sprite_id)
-    {
-      for(var j=0; j<sprite.textures.length; j++)
-      {
-        const texture = sprite.textures[j];
-        if(texture.id == texture_id)
-        {
-          return texture.coordinates;
-        }
-      }
-    }
-  }
-  return [];// not found
-}
-// -------------------------------------------------------------------------- //
 resize_canvas_handler()
 {
   canvas = document.getElementById("canvas");
@@ -171,7 +148,6 @@ main(config, data)
   const canvas = document.querySelector('#canvas');
   var gl = this.gl;
   gl.init(canvas);
-  data.gl = gl;
 
   var txs = this.txs;
   txs.load_config(config);
@@ -209,41 +185,10 @@ main(config, data)
   // for the vertices and so forth is established.
   gl.init_shader_program(vs_source, fs_source);
 
-//  var textures_ul = [];
-//  for(var i=0; i<config.texture_sprites.length; i++)
-//  {
-//    var texture = config.texture_sprites[i];
-//    textures_ul.push(gl.getUniformLocation(shaderProgram, texture.id));
-//  }
-/*
-  for(var i=0; i<config.sprite_textures.length; i++)
-  {
-    var sprite = config.sprite_textures[i];
-    for(var j=0; j<sprite.textures.length; j++)
-    {
-      var texture = sprite.textures[j];
-      textures_ul.push(gl.getUniformLocation(shaderProgram,
-        sprite.id+"_"+texture.id));
-    }
-  }
-*/
   // Collect all the info needed to use the shader program.
   // Look up which attributes our shader program is using
   // for aVertexPosition, aTextureCoord and also
   // look up uniform locations.
-/*  const programInfo = {
-    program: shaderProgram,
-    attribLocations: {
-      vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-      textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
-    },
-    uniformLocations: {
-      projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-      modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-      textures: textures_ul,
-    },
-  };
-*/
   gl.get_program_info();
 
   // Here's where we call the routine that builds all the
@@ -264,7 +209,6 @@ main(config, data)
       const deltaTime = now - then;
       then = now;
 
-//      self.draw_scene(gl, programInfo, deltaTime, data);
       gl.draw_scene(0, data);
       requestAnimationFrame(render);
     }
@@ -289,9 +233,7 @@ get_data()
 pre_main()
 {
   var data = {
-    "gl": null,
     "textures": [],
-    "ground": [],
     "buffers": {},
     "square_rotation": 0.0,
     "square_position_x": 0.0,
