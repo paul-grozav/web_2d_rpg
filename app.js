@@ -69,6 +69,10 @@ class app {
 // -------------------------------------------------------------------------- //
 constructor(config) {
   this.config = config;
+  this.data = {};
+  this.gl = new webgl();
+  this.txs = new textures();
+  this.wrld = new world(this.config, this.txs);
 //  return `${this.config} says hello.`;
 }
 // -------------------------------------------------------------------------- //
@@ -118,22 +122,26 @@ handle_key_press(e, data, config)
   if (e.keyCode == '38') { // up
     data.square_position_y += sense_y*move_increment_y;
     config.world.tiles[config.world.tiles.length-1].y += 1;
-    this.init_buffers(config, data);
+    var ots = this.wrld.get_objects_and_textures();
+    this.gl.init_buffers(this.data, ots.objects, ots.textures);
   }
   else if (e.keyCode == '40') { // down
     data.square_position_y -= sense_y*move_increment_y;
     config.world.tiles[config.world.tiles.length-1].y -= 1;
-    this.init_buffers(config, data);
+    var ots = this.wrld.get_objects_and_textures();
+    this.gl.init_buffers(this.data, ots.objects, ots.textures);
   }
   else if (e.keyCode == '37') { // left
     data.square_position_x += sense_x*move_increment_x;
     config.world.tiles[config.world.tiles.length-1].x -= 1;
-    this.init_buffers(config, data);
+    var ots = this.wrld.get_objects_and_textures();
+    this.gl.init_buffers(this.data, ots.objects, ots.textures);
   }
   else if (e.keyCode == '39') { // right
     data.square_position_x -= sense_x*move_increment_x;
     config.world.tiles[config.world.tiles.length-1].x += 1;
-    this.init_buffers(config, data);
+    var ots = this.wrld.get_objects_and_textures();
+    this.gl.init_buffers(this.data, ots.objects, ots.textures);
   }
   else if (e.keyCode == '13') { // enter
     console.log(data);
@@ -161,15 +169,15 @@ load_file(url, callback)
 main(config, data)
 {
   const canvas = document.querySelector('#canvas');
-  var gl = new webgl();
+  var gl = this.gl;
   gl.init(canvas);
   data.gl = gl;
 
-  var txs = new textures();
+  var txs = this.txs;
   txs.load_config(config);
 //  console.log(txs);
 
-  var wrld = new world(config, txs);
+  var wrld = this.wrld;
 
   // Vertex shader program
   const vs_source = `
@@ -242,6 +250,7 @@ main(config, data)
   // objects we'll be drawing.
   var ots = wrld.get_objects_and_textures();
   gl.init_buffers(data, ots.objects, ots.textures);
+//  console.log(data);
 
 //  data.textures = this.load_textures(gl, config);
   data.textures = gl.load_sprite_textures( txs.get_sprite_textures() );
@@ -269,6 +278,11 @@ dependencies_loaded_handler()
   this.main(this.config, this.data);
 }
 // -------------------------------------------------------------------------- //
+get_data()
+{
+  return this.data;
+}
+// -------------------------------------------------------------------------- //
 //
 // Runs before main - to load dependencies
 //
@@ -283,6 +297,7 @@ pre_main()
     "square_position_x": 0.0,
     "square_position_y": 0.0,
   };
+  this.data = data;
 
   // load JS dependencies
   {

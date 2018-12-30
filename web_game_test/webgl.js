@@ -7,6 +7,7 @@ constructor()
   this.gl = null;
   this.program_info = {};
   this.shader_program = null;
+  this.last_init_number_objects = 0;
 }
 // -------------------------------------------------------------------------- //
 init(canvas)
@@ -81,6 +82,7 @@ init_buffers(data, objects, textures) {
   gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer);
 
   // Now create an array of positions for the square.
+  this.last_init_number_objects = objects.length;
   if(objects.length == 0)
   {
     alert('Error: no objects to show');
@@ -102,7 +104,7 @@ init_buffers(data, objects, textures) {
   {
     alert('Error: no textures to show');
   }
-  console.log(textures);
+//  console.log(textures);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textures), gl.STATIC_DRAW);
 
 
@@ -281,7 +283,6 @@ draw_scene(deltaTime, data)
     const stride = 0;
     const offset = 0;
     gl.bindBuffer(gl.ARRAY_BUFFER, data.buffers.position);
-
     gl.vertexAttribPointer(
         program_info.attribLocations.vertexPosition,
         numComponents,
@@ -335,6 +336,7 @@ draw_scene(deltaTime, data)
     gl.uniform1i(program_info.uniformLocations.textures[i], i);
     gl.activeTexture(gl.TEXTURE0+i);
     gl.bindTexture(gl.TEXTURE_2D, data.textures[i]);
+//    gl.uniform1i(program_info.uniformLocations.textures[i], i);
 //    console.log(data.textures[i]);
   }
   // Tell WebGL we want to affect texture unit 0
@@ -356,7 +358,7 @@ draw_scene(deltaTime, data)
 //    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
 //    offset = 4 ; // draw second square
 //    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-    for(var offset=0; offset<data.ground.length/2; offset+=vertexCount)
+    for(var offset=0; offset<this.last_init_number_objects/2; offset+=vertexCount)
     {
       gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
     }
