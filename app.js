@@ -261,7 +261,7 @@ main(config, data)
 
 //      self.draw_scene(gl, programInfo, deltaTime, data);
       gl.draw_scene(0, data);
-//      requestAnimationFrame(render);
+      requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
   }
