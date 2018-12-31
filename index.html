@@ -3,16 +3,19 @@
   <head>
     <meta charset="utf-8">
     <title>Work in progress</title>
+    <script sync src="./gl-matrix.js"></script>
+    <script sync src="./web_game_test/webgl.js"></script>
+    <script sync src="./web_game_test/texture.js"></script>
+    <script sync src="./web_game_test/sprite_texture.js"></script>
+    <script sync src="./web_game_test/textures.js"></script>
+    <script sync src="./web_game_test/world.js"></script>
+    <script sync src="./config.js"></script>
+    <script sync src="./app.js"></script>
   </head>
 
   <body>
     <canvas id="canvas">Your browser doesn't support canvas</canvas>
+    <div style="position:absolute; top:0px; left:0px; color: white;">abc</div>
+    <script type="text/javascript">(function(){ app_instance.pre_main(); })();</script>
   </body>
-
-  <script sync src="./web_game_test/webgl.js"></script>
-  <script sync src="./web_game_test/texture.js"></script>
-  <script sync src="./web_game_test/sprite_texture.js"></script>
-  <script sync src="./web_game_test/textures.js"></script>
-  <script sync src="./web_game_test/world.js"></script>
-  <script sync src="./app.js"></script>
 </html>

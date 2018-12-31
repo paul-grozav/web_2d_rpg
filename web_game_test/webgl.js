@@ -24,6 +24,8 @@ init(canvas)
   }
 }
 // -------------------------------------------------------------------------- //
+// Initialize a shader program; this is where all the lighting
+// for the vertices and so forth is established.
 // Initialize a shader program, so WebGL knows how to draw our data
 init_shader_program(vs_source, fs_source)
 {
@@ -193,6 +195,9 @@ load_sprite_textures(sprite_textures){
   return textures;
 }
 // -------------------------------------------------------------------------- //
+// Collect all the info needed to use the shader program.
+// Look up which attributes our shader program is using for aVertexPosition,
+// aTextureCoord and also look up uniform locations.
 get_program_info()
 {
   var gl = this.gl;
@@ -219,7 +224,7 @@ get_program_info()
 }
 // -------------------------------------------------------------------------- //
 // Draw the scene.
-draw_scene(deltaTime, data)
+draw_scene(data)
 {
   var gl = this.gl;
   var program_info = this.program_info;
@@ -365,7 +370,7 @@ draw_scene(deltaTime, data)
   }
 
   // Update the rotation for the next draw
-  data.square_rotation += deltaTime;
+  //data.square_rotation += delta_time;
 }
 // -------------------------------------------------------------------------- //
 } // class webgl
