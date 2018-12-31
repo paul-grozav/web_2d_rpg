@@ -8,6 +8,7 @@ constructor(config) {
   this.gl = new webgl();
   this.txs = new textures();
   this.wrld = new world(this.config, this.txs);
+  this.render_timestamps = []; // timestamps when frame was drawn
 }
 // -------------------------------------------------------------------------- //
 resize_canvas_handler()
@@ -25,40 +26,64 @@ resize_canvas_handler()
 // -------------------------------------------------------------------------- //
 handle_key_press(e, data, config)
 {
-  console.log("handle_key_press_B");
-  const sense_x = config.settings.sense_x;
-  const sense_y = config.settings.sense_y;
-  const move_increment_x = config.settings.move_increment_x;
-  const move_increment_y = config.settings.move_increment_y;
+  // const sense_x = config.settings.sense_x;
+  // const sense_y = config.settings.sense_y;
+  // const move_increment_x = config.settings.move_increment_x;
+  // const move_increment_y = config.settings.move_increment_y;
   e = e || window.event;
   if (e.keyCode == '38') { // up
-    data.square_position_y += sense_y*move_increment_y;
-    config.world.tiles[config.world.tiles.length-1].y += 1;
+    this.move_player_up();
   }
   else if (e.keyCode == '40') { // down
-    data.square_position_y -= sense_y*move_increment_y;
-    config.world.tiles[config.world.tiles.length-1].y -= 1;
+    this.move_player_down();
   }
   else if (e.keyCode == '37') { // left
-    data.square_position_x += sense_x*move_increment_x;
-    config.world.tiles[config.world.tiles.length-1].x -= 1;
+    this.move_player_left();
   }
   else if (e.keyCode == '39') { // right
-    data.square_position_x -= sense_x*move_increment_x;
-    config.world.tiles[config.world.tiles.length-1].x += 1;
+    this.move_player_right();
   }
   else if (e.keyCode == '13') { // enter
     console.log(data);
-    return; // don't redraw
   }
-  else {
-    return; // don't redraw
-  }
-  console.log("handle_key_press_M1");
+}
+// -------------------------------------------------------------------------- //
+move_player_up()
+{
+  this.data.square_position_y += this.config.settings.sense_y *
+    this.config.settings.move_increment_y;
+  this.config.world.players[this.config.world.players.length-1].y += 1;
+  this.update_buffers();
+}
+// -------------------------------------------------------------------------- //
+move_player_down()
+{
+  this.data.square_position_y -= this.config.settings.sense_y *
+    this.config.settings.move_increment_y;
+  this.config.world.players[this.config.world.players.length-1].y -= 1;
+  this.update_buffers();
+}
+// -------------------------------------------------------------------------- //
+move_player_left()
+{
+  this.data.square_position_x += this.config.settings.sense_x *
+    this.config.settings.move_increment_x;
+  this.config.world.players[this.config.world.players.length-1].x -= 1;
+  this.update_buffers();
+}
+// -------------------------------------------------------------------------- //
+move_player_right()
+{
+  this.data.square_position_x -= this.config.settings.sense_x *
+    this.config.settings.move_increment_x;
+  this.config.world.players[this.config.world.players.length-1].x += 1;
+  this.update_buffers();
+}
+// -------------------------------------------------------------------------- //
+update_buffers()
+{
   var ots = this.wrld.get_objects_and_textures();
-  console.log("handle_key_press_M2");
   this.gl.init_buffers(this.data, ots.objects, ots.textures);
-  console.log("handle_key_press_E");
 }
 // -------------------------------------------------------------------------- //
 //
@@ -74,6 +99,7 @@ main(config, data)
   gl.init(canvas);
   txs.load_config(config);
 //  console.log(txs);
+  wrld.init_static_map();
 
   // Vertex shader program
   const vs_source = `
@@ -108,28 +134,43 @@ main(config, data)
   data.textures = gl.load_sprite_textures( txs.get_sprite_textures() );
 
   // Draw the scene repeatedly
-  // var last_timestamp = performance.now();
-  var timestamps = []; // timestamps when frame was drawn
   //var then = 0;
-  function render(now) // called after
+  var self = this;
+  function render(now)
   {
-    // console.log(now);
-    const current_timestamp = Date.now();
-    const one_second_ago = current_timestamp - 1000;
-    //const current_timestamp = performance.now();
-    timestamps.push(current_timestamp);
-    timestamps = timestamps.filter(function(timestamp){
-      return timestamp > one_second_ago;
-    });
-    document.getElementsByTagName("div")[0].innerHTML = timestamps.length;
-    //now *= 0.001;  // convert to seconds
-    //const delta_time = now - then;
-    //then = now;
-
-    gl.draw_scene(data);
+    self.render_graphics(now);
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
+}
+// -------------------------------------------------------------------------- //
+render_graphics(now) // called after
+{
+  //console.log(now);
+  const current_timestamp = Date.now();
+  const one_second_ago = current_timestamp - 1000;
+  //const current_timestamp = performance.now();
+  this.render_timestamps.push(current_timestamp);
+  this.render_timestamps = this.render_timestamps.filter(function(timestamp){
+    return timestamp > one_second_ago;
+  });
+  this.set_status("FPS: " + this.render_timestamps.length);
+
+  //now *= 0.001;  // convert to seconds
+  //const delta_time = now - then;
+  //then = now;
+
+  this.gl.draw_scene(this.data);
+}
+// -------------------------------------------------------------------------- //
+set_status(status)
+{
+  document.getElementsByTagName("div")[0].innerHTML = status;
+}
+// -------------------------------------------------------------------------- //
+get_status(status)
+{
+  return document.getElementsByTagName("div")[0].innerHTML;
 }
 // -------------------------------------------------------------------------- //
 get_data()
@@ -142,6 +183,7 @@ get_data()
 //
 pre_main()
 {
+  this.set_status("Loading...");
   var data = {
     "textures": [],
     "buffers": {},
@@ -168,18 +210,74 @@ pre_main()
   {
     var self = this;
     document.onkeydown = function(e){
-      console.log("onkeydown_B");
       self.handle_key_press(e, data, self.config);
-      console.log("onkeydown_E");
     };
   }
 
   // start app's main()
+  this.show_controls();
   this.main(self.config, data);
+}
+// -------------------------------------------------------------------------- //
+show_controls()
+{
+  var self = this;
+
+  // UP
+  var up_btn = document.createElement("input");
+  up_btn.type = "button";
+  up_btn.value = "UP";
+  up_btn.style.position = "absolute";
+  up_btn.style.top = "15px";
+  up_btn.style.left = "65px";
+  up_btn.onclick = function(){
+    console.log("up");
+    self.move_player_up();
+  };
+  document.body.appendChild(up_btn);
+
+  // DOWN
+  var down_btn = document.createElement("input");
+  down_btn.type = "button";
+  down_btn.value = "DOWN";
+  down_btn.style.position = "absolute";
+  down_btn.style.top = "75px";
+  down_btn.style.left = "65px";
+  down_btn.onclick = function(){
+    console.log("down");
+    self.move_player_down();
+  };
+  document.body.appendChild(down_btn);
+
+  // LEFT
+  var left_btn = document.createElement("input");
+  left_btn.type = "button";
+  left_btn.value = "LEFT";
+  left_btn.style.position = "absolute";
+  left_btn.style.top = "45px";
+  left_btn.style.left = "5px";
+  left_btn.onclick = function(){
+    console.log("left");
+    self.move_player_left();
+  };
+  document.body.appendChild(left_btn);
+
+  // RIGHT
+  var right_btn = document.createElement("input");
+  right_btn.type = "button";
+  right_btn.value = "RIGHT";
+  right_btn.style.position = "absolute";
+  right_btn.style.top = "45px";
+  right_btn.style.left = "100px";
+  right_btn.onclick = function(){
+    console.log("right");
+    self.move_player_right();
+  };
+  document.body.appendChild(right_btn);
 }
 // -------------------------------------------------------------------------- //
 } // class app
 // -------------------------------------------------------------------------- //
 var app_instance = new app(init_config);
-//app_instance.pre_main();
+//app_instance.pre_main(); // started from HTML
 // -------------------------------------------------------------------------- //

@@ -7,31 +7,41 @@ constructor(config, textures)
   this.config = config;
   this.textures = textures;
 //  console.log(id, coordinates);
-}
-// -------------------------------------------------------------------------- //
-get_objects_and_textures()
-{
-  var data = {
+  this.static_map = {
     "objects": [],
     "textures": [],
   };
+}
+// -------------------------------------------------------------------------- //
+init_static_map()
+{
+  this.static_map = this.get_objects_and_textures(this.config.world.static_map);
+}
+// -------------------------------------------------------------------------- //
+get_objects_and_textures(tiles)
+{
+  // copy static +
+  var data = {
+    "objects": Array.from(this.static_map.objects),
+    "textures": Array.from(this.static_map.textures),
+  };
 
-  // objects to be drawn later
-  const tiles = this.config.world.tiles;
-  for(var i=0; i<tiles.length; i++)
+  if(typeof tiles === "undefined")
   {
-    data.objects = data.objects.concat(
-      this.tile_to_vertex_coordinates(tiles[i], this.config.settings)
-    );
+    tiles = this.config.world.players;
   }
 
-  // textures to be used to draw the objects above
-  for(var i=0; i<this.config.world.tiles.length; i++)
+  for(var i=0; i<tiles.length; i++)
   {
-    const tile = this.config.world.tiles[i];
-    const tile_texture_coordinates =
-      this.textures.get_texture(tile.texture).get_coordinates();
-    data.textures = data.textures.concat(tile_texture_coordinates);
+    const tile = tiles[i];
+    // objects to be drawn later
+    data.objects = data.objects.concat(
+      this.tile_to_vertex_coordinates(tile, this.config.settings)
+    );
+    // textures to be used to draw the objects above
+    data.textures = data.textures.concat(
+      this.textures.get_texture(tile.texture).get_coordinates()
+    );
   }
 
 //  console.log(data);

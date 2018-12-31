@@ -6,8 +6,8 @@ const init_config = {
   "settings": {
     "sense_x": -1, // move the opposite way
     "sense_y": -1, // move the opposite way
-    "move_increment_x": 0.5,
-    "move_increment_y": 0.5,
+    "move_increment_x": 0.30, // size * size_x
+    "move_increment_y": 0.30, // size * size_y
     "size_x": 2,
     "size_y": 2,
     "size": 0.15,
@@ -15,7 +15,8 @@ const init_config = {
   "sprite_textures": [
     {
       "id": "s1",
-      "url": "sprite1_character_ground_plain.png",
+      "url": "sprite1_character_ground.png", // nice characters
+      // "url": "sprite1_character_ground_plain.png", // simple squares
       "textures": {
         "character": {
           "coordinates": [0.492, -1.0, 0.007, -1.0, 0.492,  0.0, 0.007,  0.0],
@@ -27,23 +28,13 @@ const init_config = {
     },
   ],
   "world": {
-    "tiles": [
+    "players": [
 /*      {
         "x": 0,
         "y": 0,
         "texture": "s1_ground",
       },
       {
-        "x": 0,
-        "y": 1,
-        "texture": "s1_ground",
-      },
-      {
-        "x": 0,
-        "y": 2,
-        "texture": "s1_ground",
-      },
-      {
         "x": 1,
         "y": 0,
         "texture": "s1_ground",
@@ -51,11 +42,6 @@ const init_config = {
       {
         "x": 1,
         "y": 1,
-        "texture": "s1_ground",
-      },
-      {
-        "x": 1,
-        "y": 2,
         "texture": "s1_ground",
       },
 */      {
@@ -64,9 +50,12 @@ const init_config = {
         "texture": "s1_character",
       },
     ],
+    "static_map": [
+    ],
   },
 };
-for(var x=0; x<100; x++) for(var y=0; y<100; y++) init_config.world.tiles.unshift({
-  x:x, y:y, texture: "s1_ground"
-});
+const square_length=10;
+for(var x=0; x<square_length; x++)
+  for(var y=0; y<square_length; y++)
+    init_config.world.static_map.unshift({x:x, y:y, texture: "s1_ground"});
 // -------------------------------------------------------------------------- //
