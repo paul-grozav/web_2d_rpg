@@ -13,7 +13,7 @@ constructor(config) {
 // -------------------------------------------------------------------------- //
 resize_canvas_handler()
 {
-  canvas = document.getElementById("canvas");
+  var canvas = document.getElementById("canvas");
   if (canvas.width  < window.innerWidth)
   {
     canvas.width  = window.innerWidth;
